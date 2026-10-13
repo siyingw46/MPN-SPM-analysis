@@ -1,0 +1,9 @@
+Public code release candidate: 2026-10-09
+Upload-safety update: 2026-10-13; only .gitignore and package metadata changed. Analysis code and aggregate reference results are unchanged.
+Packaging change: navigation/README update only; analysis scripts and configurations copied unchanged from the prior candidate
+Analysis configuration: v0.4
+Result basis: controlled local run01; run02 confirmed selected ML and 5,000-bootstrap outputs
+Figure 4 and Figure S5 reporting-only corrections included
+No SEER case-level data, patient-level predictions, or fitted model parameters included
+Code licence: intentionally none; public viewing does not grant general reuse rights
+GitHub release tag: to be assigned after upload

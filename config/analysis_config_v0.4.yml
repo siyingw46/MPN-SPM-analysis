@@ -1,0 +1,62 @@
+project:
+  name: seer_mpn_nonhematologic_spm_prediction
+  protocol_version: "0.4"
+  random_seed: 20260723
+
+cohort:
+  source_year_min: 2000
+  source_year_max: 2023
+  main_ml_year_min: 2004
+  main_ml_year_max: 2023
+  adult_age_min: 18
+  index_histology_codes: [9950, 9961, 9962]
+  minimum_time_months: 1
+  index_disease_scope: "BCR::ABL1-negative classic MPN: PV, ET, PMF"
+
+endpoint:
+  primary: first_nonhematologic_malignant_spm
+  competing_events: [death, hematologic_malignancy_or_registered_mpn_evolution]
+  event_type:
+    censoring: 0
+    nonhematologic_spm: 1
+    death_before_event: 2
+    hematologic_event_before_nonhematologic_spm_or_death: 3
+  hematologic_definition: "Malignant ICD-O-3 hematopoietic/lymphoid morphology; executable observed-code audit is versioned in data/metadata/v0.4."
+  same_month_rule: "Registered tumour precedes death; between tumour types use primary sequence; unresolved ties excluded from modelling and retained in audit."
+
+predictors:
+  main: [age_numeric, age_85plus, sex, race, mpn_subtype, diagnosis_year, rural_urban, median_household_income, chemotherapy]
+  no_chemotherapy: [age_numeric, age_85plus, sex, race, mpn_subtype, diagnosis_year, rural_urban, median_household_income]
+
+split:
+  main_method: patient_level_stratified_random
+  development_fraction: 0.70
+  test_fraction: 0.30
+  stratification: [event_type, mpn_subtype, diagnosis_era]
+  nested_cv_outer_folds: 5
+  nested_cv_outer_repeats: 3
+  nested_cv_inner_folds: 3
+  temporal_training_years: [2004, 2015]
+  temporal_test_years: [2016, 2018]
+
+horizons_months: [12, 36, 60]
+
+models:
+  base: [cs_cox, fine_gray, elastic_net_cox, linear_survival_svm, kernel_survival_svm, rsf, extra_survival_trees, xgboost_cox, deephit_cr]
+  ensembles: [equal_weight, performance_weighted, nonnegative_stacking, ridge_meta]
+
+evaluation:
+  discrimination: [harrell_c, uno_c, auc_12_36_60, iauc]
+  accuracy: [brier_12_36_60, ibs]
+  calibration: [oe_ratio, calibration_slope, calibration_curve]
+  utility: [dca_12_36_60]
+  bootstrap_replicates: 5000
+  pairwise_adjustment: Holm
+
+sensitivity_analyses:
+  - no_chemotherapy_2004_2023
+  - no_chemotherapy_2000_2023
+  - temporal_2004_2015_to_2016_2018
+  - locked_global_model_by_mpn_subtype
+  - subtype_specific_refit_if_event_count_adequate
+  - prior_aml_only_competing_definition

@@ -1,0 +1,99 @@
+version: "0.3"
+frozen_date: "2026-07-18"
+seed: 20260718
+
+target:
+  event: first_non_aml_malignant_spm
+  competing_events: [death, aml]
+  report_horizons_months: [12, 36, 60]
+  evaluation_grid_months: {start: 12, stop: 60, step: 1}
+
+cross_validation:
+  outer_folds: 5
+  outer_repeats: 3
+  inner_folds: 3
+  stratification: [event_type, mpn_subtype, diagnosis_era]
+  tuning_primary: competing_risk_ipcw_ibs_12_60
+  tuning_secondary: competing_risk_iauc_12_60
+
+base_models:
+  - id: cs_cox
+    label: Cause-specific Cox
+    family: traditional_linear
+    status: required
+  - id: fine_gray
+    label: Fine-Gray
+    family: traditional_competing_risk
+    status: required
+  - id: elastic_net_cox
+    label: Elastic Net cause-specific Cox
+    family: penalized_linear
+    status: required
+  - id: linear_survival_svm
+    label: Linear Survival SVM
+    family: linear_margin
+    status: required_with_foldwise_cif_calibration
+    max_newton_iterations: 20
+  - id: kernel_survival_svm
+    label: Approximate-kernel Survival SVM
+    family: nonlinear_kernel
+    status: conditional_on_smoke_test
+    fallback: catboost_cox
+    approximation: {method: nystroem_rbf, components: 96}
+    max_newton_iterations: 20
+  - id: rsf
+    label: Cause-specific Random Survival Forest
+    family: bagged_survival_trees
+    status: required
+  - id: extra_survival_trees
+    label: Cause-specific Extra Survival Trees
+    family: randomized_survival_trees
+    status: required
+  - id: xgboost_cox
+    label: Cause-specific XGBoost-Cox
+    family: boosted_survival_trees
+    status: required
+  - id: deephit_cr
+    label: DeepHit competing risks
+    family: deep_competing_risk
+    status: conditional_on_smoke_test
+
+ensembles:
+  - id: equal_weight_voting
+  - id: performance_weighted_voting
+    weighting: inverse_squared_inner_ibs
+  - id: nonnegative_linear_stacking
+    constraints: [weights_nonnegative, weights_sum_to_one]
+    objective: pooled_ipcw_brier_12_60m
+  - id: regularized_meta
+    implementation: ridge_with_unpenalized_intercept
+    alpha_grid: [0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0]
+    probability_postprocessing: [clip_0_1, cumulative_maximum_over_time]
+  - id: nonlinear_meta
+    status: exploratory_only_if_primary_ensembles_inadequate
+
+ensemble_eligibility:
+  minimum_outer_fold_success: 0.90
+  fold_internal_ibs_rule: within_one_standard_error_of_best
+  maximum_absolute_iauc_loss_from_best: 0.02
+  minimum_models: 3
+  maximum_models: 6
+  fit_source: three_fold_inner_oof_within_each_outer_training_fold
+
+ensemble_retention:
+  ibs_rule: no_worse_than_best_base_model_on_nested_oof
+  maximum_absolute_iauc_loss_from_best_base: 0.005
+  remove_if_rule_not_met: true
+
+metrics:
+  discrimination: [harrell_c, uno_ipcw_c, auc_12m, auc_36m, auc_60m, iauc_12_60m]
+  accuracy: [brier_12m, brier_36m, brier_60m, ibs_12_60m]
+  calibration: [intercept, slope, observed_expected_ratio, ici, quantile_curve]
+  clinical_utility: [decision_curve_net_benefit]
+  threshold_optional: [ipcw_sensitivity, ipcw_specificity, ipcw_ppv, ipcw_npv, f1, high_risk_fraction]
+  bootstrap_replicates: 5000
+
+reporting:
+  count_cause_components_as_separate_models: false
+  primary_output: non_aml_spm_cif
+  defer_visualization_until_model_audit_complete: true

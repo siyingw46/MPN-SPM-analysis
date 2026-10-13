@@ -1,0 +1,41 @@
+# Restricted inputs, predictions, fitted models, and run directories
+data/
+output/
+outputs/
+results/
+runs/
+logs/
+artifacts/
+checkpoints/
+*.npz
+*.npy
+*.pkl
+*.pickle
+*.joblib
+*.pt
+*.pth
+*.ckpt
+*.parquet
+*.feather
+*.slm
+*.dic
+*.sas
+# Known SEER case-listing export names; keep raw data outside this repository.
+*SEER*.txt
+2000-2023.txt
+*patient*prediction*.csv
+*patient*prediction*.tsv
+input_manifest.json
+status.json
+.mpn_reproduction_run
+
+# Local environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.Rhistory
+.RData
+.Rproj.user/
+.DS_Store
+Thumbs.db

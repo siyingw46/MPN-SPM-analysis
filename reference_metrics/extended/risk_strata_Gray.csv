@@ -1,0 +1,8 @@
+comparison,p_raw,p_holm,test
+Overall across Q1–Q4,4.1668672922237346e-101,,"Gray test, rho=0"
+Q1 lowest vs Q2,5.844610076667674e-17,1.753383023000302e-16,"Pairwise Gray test, Holm adjusted"
+Q1 lowest vs Q3,4.4261071703490625e-50,2.2130535851745313e-49,"Pairwise Gray test, Holm adjusted"
+Q1 lowest vs Q4 highest,4.8213076198793364e-92,2.892784571927602e-91,"Pairwise Gray test, Holm adjusted"
+Q2 vs Q3,6.984805545303459e-13,1.3969611090606918e-12,"Pairwise Gray test, Holm adjusted"
+Q2 vs Q4 highest,1.8175687020536661e-40,7.2702748082146646e-40,"Pairwise Gray test, Holm adjusted"
+Q3 vs Q4 highest,1.9183174296332263e-10,1.9183174296332263e-10,"Pairwise Gray test, Holm adjusted"
